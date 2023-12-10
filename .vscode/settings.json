@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "font8x8_basic.h": "c"
+        "font8x8_basic.h": "c",
+        "new": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

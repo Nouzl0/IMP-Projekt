@@ -1,5 +1,6 @@
 #include "I2SMEMSSampler.h"
 #include "soc/i2s_reg.h"
+#include <algorithm>
 
 I2SMEMSSampler::I2SMEMSSampler(
     i2s_port_t i2s_port,
@@ -16,7 +17,7 @@ void I2SMEMSSampler::configureI2S()
     if (m_fixSPH0645)
     {
         // FIXES for SPH0645
-        REG_SET_BIT(I2S_TIMING_REG(m_i2sPort), BIT(9));
+        REG_SET_BIT(I2S_TIMING_REG(m_i2sPort), BIT(8));
         REG_SET_BIT(I2S_CONF_REG(m_i2sPort), I2S_RX_MSB_SHIFT);
     }
 
@@ -29,11 +30,23 @@ int I2SMEMSSampler::read(int16_t *samples, int count)
     int32_t *raw_samples = (int32_t *)malloc(sizeof(int32_t) * count);
     size_t bytes_read = 0;
     i2s_read(m_i2sPort, raw_samples, sizeof(int32_t) * count, &bytes_read, portMAX_DELAY);
+
     int samples_read = bytes_read / sizeof(int32_t);
+
+    // Make sure we copy all samples, even if the count is greater than samples_read
+    samples_read = std::min(samples_read, count);
+
     for (int i = 0; i < samples_read; i++)
     {
         samples[i] = (raw_samples[i] & 0xFFFFFFF0) >> 11;
     }
+
+    // If there are remaining slots in 'samples', fill them with zeros
+    for (int i = samples_read; i < count; i++)
+    {
+        samples[i] = 0;
+    }
+
     free(raw_samples);
-    return samples_read;
+    return count; // Return the count of requested samples, not just the ones read
 }

@@ -14,7 +14,6 @@ protected:
     virtual void configureI2S() = 0;
     virtual void unConfigureI2S(){};
     virtual void processI2SData(void *samples, size_t count){
-        // nothing to do for the default case
     };
 
 public:
